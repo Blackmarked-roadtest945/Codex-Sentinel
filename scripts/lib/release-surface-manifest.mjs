@@ -1,70 +1,89 @@
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
+import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-
-const ignoredPathPrefixes = [
-  ".git",
-  ".superpowers",
-  ".worktrees",
-  "worktrees",
-  "dist",
-  "evals/artifacts",
-  "docs/superpowers/plans",
-  "docs/superpowers/specs",
-  "__MACOSX",
-];
-
-function normalizeRelativePath(relativePath) {
-  return relativePath
-    .trim()
-    .replace(/\\/g, "/")
-    .replace(/\/+/g, "/")
-    .replace(/^\.\/+/, "")
-    .replace(/\/$/, "");
-}
-
-function shouldIgnoreReleaseSurfacePath(relativePath) {
-  const normalizedPath = normalizeRelativePath(relativePath);
-  const segments = normalizedPath.split("/").filter(Boolean);
-  const basename = segments[segments.length - 1] ?? "";
-
-  if (basename === ".DS_Store" || basename.startsWith("._") || segments.includes("__MACOSX")) {
-    return true;
-  }
-
-  return ignoredPathPrefixes.some((prefix) => (
-    normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`)
-  ));
-}
+import { isIgnoredReleasePath, normalizeReleasePath } from "./release-policy.mjs";
 
 function createFileHash(filePath) {
   return createHash("sha256").update(readFileSync(filePath)).digest("hex");
 }
 
-export function buildReleaseSurfaceManifest(rootPath) {
+function sortManifestEntries(entries) {
+  return [...entries].sort((left, right) => (
+    left.relativePath.localeCompare(right.relativePath) || left.entryType.localeCompare(right.entryType)
+  ));
+}
+
+function applySyntheticFiles(manifest, syntheticFiles = []) {
+  if (!Array.isArray(syntheticFiles) || syntheticFiles.length === 0) {
+    return sortManifestEntries(manifest);
+  }
+
+  const manifestByPath = new Map(manifest.map((entry) => [entry.relativePath, entry]));
+
+  for (const syntheticFile of syntheticFiles) {
+    const relativePath = normalizeReleasePath(syntheticFile.relativePath ?? "");
+    if (!relativePath || isIgnoredReleasePath(relativePath)) {
+      continue;
+    }
+
+    const parentSegments = relativePath.split("/").slice(0, -1);
+    let currentParent = "";
+    for (const segment of parentSegments) {
+      currentParent = currentParent ? `${currentParent}/${segment}` : segment;
+      if (!manifestByPath.has(currentParent)) {
+        manifestByPath.set(currentParent, {
+          entryType: "directory",
+          relativePath: currentParent,
+        });
+      }
+    }
+
+    manifestByPath.set(relativePath, {
+      entryType: "file",
+      relativePath,
+      contentHash: createHash("sha256").update(syntheticFile.content).digest("hex"),
+    });
+  }
+
+  return sortManifestEntries([...manifestByPath.values()]);
+}
+
+export function inspectReleaseSurface(rootPath, options = {}) {
   const manifest = [];
+  const issues = [];
 
   function walk(currentPath, relativePath = "") {
     const entries = readdirSync(currentPath, { withFileTypes: true })
       .sort((left, right) => left.name.localeCompare(right.name));
 
     for (const entry of entries) {
-      const nextRelativePath = normalizeRelativePath(
+      const nextRelativePath = normalizeReleasePath(
         relativePath ? `${relativePath}/${entry.name}` : entry.name
       );
 
-      if (shouldIgnoreReleaseSurfacePath(nextRelativePath)) {
+      if (isIgnoredReleasePath(nextRelativePath)) {
         continue;
       }
 
       const absolutePath = path.join(currentPath, entry.name);
+      const stats = lstatSync(absolutePath);
 
-      if (entry.isDirectory()) {
+      if (stats.isSymbolicLink()) {
+        issues.push(`release surface contains unsupported symlink ${nextRelativePath}`);
+        continue;
+      }
+
+      if (stats.isDirectory()) {
         manifest.push({
           entryType: "directory",
           relativePath: nextRelativePath,
         });
         walk(absolutePath, nextRelativePath);
+        continue;
+      }
+
+      if (!stats.isFile()) {
+        issues.push(`release surface contains unsupported file type ${nextRelativePath}`);
         continue;
       }
 
@@ -77,7 +96,19 @@ export function buildReleaseSurfaceManifest(rootPath) {
   }
 
   walk(rootPath);
-  return manifest;
+
+  return {
+    manifest: applySyntheticFiles(manifest, options.syntheticFiles),
+    issues: [...issues].sort(),
+  };
+}
+
+export function buildReleaseSurfaceManifest(rootPath, options = {}) {
+  const report = inspectReleaseSurface(rootPath, options);
+  if (report.issues.length > 0) {
+    throw new Error(report.issues.join("\n"));
+  }
+  return report.manifest;
 }
 
 export function compareReleaseSurfaceManifests(sourceManifest, archiveManifest) {

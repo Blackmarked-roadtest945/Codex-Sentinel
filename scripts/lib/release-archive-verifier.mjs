@@ -1,26 +1,23 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import {
-  buildReleaseSurfaceManifest,
+  createReleaseManifestMetadata,
+  serializeReleaseManifest,
+} from "../../evals/lib/release-manifest.mjs";
+import {
   compareReleaseSurfaceManifests,
+  inspectReleaseSurface,
 } from "./release-surface-manifest.mjs";
-
-const forbiddenRelativePrefixes = [
-  "dist/",
-  "evals/artifacts/",
-  "docs/superpowers/plans/",
-  "docs/superpowers/specs/",
-  "__MACOSX/",
-];
+import {
+  isIgnoredReleasePath,
+  normalizeReleasePath,
+  releaseManifestRelativePath,
+} from "./release-policy.mjs";
 
 function normalizeArchiveEntry(entry) {
-  return entry
-    .trim()
-    .replace(/\\/g, "/")
-    .replace(/\/+/g, "/")
-    .replace(/^\.\/+/, "");
+  return normalizeReleasePath(entry).replace(/^\.\/+/, "");
 }
 
 export function analyzeArchiveEntries(entries) {
@@ -48,12 +45,7 @@ export function analyzeArchiveEntries(entries) {
       continue;
     }
 
-    const segments = relativePath.split("/");
-    const basename = segments[segments.length - 1];
-    const matchesForbiddenPrefix = forbiddenRelativePrefixes.some((prefix) => relativePath.startsWith(prefix));
-    const matchesMacMetadata = segments.includes("__MACOSX") || basename.startsWith("._");
-
-    if (matchesForbiddenPrefix || matchesMacMetadata) {
+    if (isIgnoredReleasePath(relativePath)) {
       forbiddenEntries.push(entry);
     }
   }
@@ -106,6 +98,33 @@ function runCommand(command, args, cwd = undefined) {
   return result.stdout;
 }
 
+function formatSurfaceIssues(prefix, surfaceIssues) {
+  return surfaceIssues.map((issue) => `${prefix} ${issue}`);
+}
+
+function loadArchiveReleaseManifest(extractedRoot) {
+  const manifestPath = path.join(extractedRoot, releaseManifestRelativePath);
+
+  if (!existsSync(manifestPath)) {
+    return {
+      manifestMetadata: null,
+      issues: [`archive is missing ${releaseManifestRelativePath}`],
+    };
+  }
+
+  try {
+    return {
+      manifestMetadata: JSON.parse(readFileSync(manifestPath, "utf8")),
+      issues: [],
+    };
+  } catch (error) {
+    return {
+      manifestMetadata: null,
+      issues: [`archive release manifest is not valid JSON: ${error.message}`],
+    };
+  }
+}
+
 export function listArchiveEntries(archivePath) {
   return runCommand("unzip", ["-Z1", archivePath])
     .split("\n")
@@ -113,16 +132,12 @@ export function listArchiveEntries(archivePath) {
     .filter(Boolean);
 }
 
-export function loadManifestMetadata(repoRoot) {
-  return JSON.parse(runCommand("node", ["evals/run-codex-sentinel.mjs", "--manifest-json"], repoRoot));
-}
-
 export function verifyReleaseArchive({ archivePath, sourceRoot }) {
   const entries = listArchiveEntries(archivePath);
   const entryReport = analyzeArchiveEntries(entries);
   const issues = [...entryReport.issues];
   const surfaceIssues = [];
-  let sourceManifest = null;
+  const sourceManifest = createReleaseManifestMetadata(sourceRoot);
   let archiveManifest = null;
 
   if (entryReport.forbiddenEntries.length > 0) {
@@ -135,6 +150,7 @@ export function verifyReleaseArchive({ archivePath, sourceRoot }) {
       rootDirName: null,
       forbiddenEntries: entryReport.forbiddenEntries,
       issues,
+      surfaceIssues,
       sourceManifest,
       archiveManifest,
     };
@@ -149,15 +165,36 @@ export function verifyReleaseArchive({ archivePath, sourceRoot }) {
     if (!existsSync(extractedRoot)) {
       issues.push(`archive root ${entryReport.rootDirName} was not extracted`);
     } else {
-      sourceManifest = loadManifestMetadata(sourceRoot);
-      archiveManifest = loadManifestMetadata(extractedRoot);
-      surfaceIssues.push(
-        ...compareReleaseSurfaceManifests(
-          buildReleaseSurfaceManifest(sourceRoot),
-          buildReleaseSurfaceManifest(extractedRoot)
-        )
-      );
-      issues.push(...compareManifestMetadata(sourceManifest, archiveManifest));
+      const archiveManifestResult = loadArchiveReleaseManifest(extractedRoot);
+      archiveManifest = archiveManifestResult.manifestMetadata;
+      issues.push(...archiveManifestResult.issues);
+
+      const sourceSurface = inspectReleaseSurface(sourceRoot, {
+        syntheticFiles: [
+          {
+            relativePath: releaseManifestRelativePath,
+            content: serializeReleaseManifest(sourceRoot),
+          },
+        ],
+      });
+      const archiveSurface = inspectReleaseSurface(extractedRoot);
+
+      surfaceIssues.push(...formatSurfaceIssues("source", sourceSurface.issues));
+      surfaceIssues.push(...formatSurfaceIssues("archive", archiveSurface.issues));
+
+      if (archiveManifest) {
+        issues.push(...compareManifestMetadata(sourceManifest, archiveManifest));
+      }
+
+      if (sourceSurface.issues.length === 0 && archiveSurface.issues.length === 0) {
+        surfaceIssues.push(
+          ...compareReleaseSurfaceManifests(
+            sourceSurface.manifest,
+            archiveSurface.manifest
+          )
+        );
+      }
+
       issues.push(...surfaceIssues);
     }
   } finally {

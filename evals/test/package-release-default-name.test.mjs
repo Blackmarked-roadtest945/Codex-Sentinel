@@ -12,15 +12,18 @@ test("package-release defaults to the public Codex-Sentinel archive name", () =>
   const tempRepo = path.join(tempRoot, "repo");
 
   try {
-    mkdirSync(path.join(tempRepo, "scripts", "lib"), { recursive: true });
-    cpSync(path.join(repoRoot, "scripts", "package-release.sh"), path.join(tempRepo, "scripts", "package-release.sh"));
-    cpSync(path.join(repoRoot, "scripts", "check-package-root.mjs"), path.join(tempRepo, "scripts", "check-package-root.mjs"));
-    cpSync(
-      path.join(repoRoot, "scripts", "lib", "package-root-guard.mjs"),
-      path.join(tempRepo, "scripts", "lib", "package-root-guard.mjs")
-    );
-    writeFileSync(path.join(tempRepo, "README.md"), "# Temp repo\n", "utf8");
-    writeFileSync(path.join(tempRepo, ".gitignore"), "dist/\n", "utf8");
+    cpSync(repoRoot, tempRepo, {
+      recursive: true,
+      filter: (sourcePath) => {
+        const relativePath = path.relative(repoRoot, sourcePath);
+        if (!relativePath) {
+          return true;
+        }
+
+        const [topLevelSegment] = relativePath.split(path.sep);
+        return topLevelSegment !== ".git" && topLevelSegment !== ".worktrees" && topLevelSegment !== "dist";
+      },
+    });
 
     const result = spawnSync("bash", ["scripts/package-release.sh"], {
       cwd: tempRepo,

@@ -4,23 +4,16 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 archive_name="${1:-Codex-Sentinel}"
 node "$repo_root/scripts/check-package-root.mjs" "$repo_root"
+node "$repo_root/scripts/check-release-surface.mjs" "$repo_root"
 dist_dir="$repo_root/dist"
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/codex-sentinel-release.XXXXXX")"
 staging_dir="$staging_root/$archive_name"
 archive_path="$dist_dir/$archive_name.zip"
 force_no_rsync="${CODEX_SENTINEL_FORCE_NO_RSYNC:-0}"
-
-exclude_patterns=(
-  ".git"
-  ".superpowers"
-  "dist"
-  "evals/artifacts"
-  "docs/superpowers/plans"
-  "docs/superpowers/specs"
-  "__MACOSX"
-  "._*"
-  ".DS_Store"
-)
+exclude_patterns=()
+while IFS= read -r pattern; do
+  exclude_patterns+=("$pattern")
+done < <(node "$repo_root/scripts/print-release-exclude-patterns.mjs")
 
 cleanup() {
   rm -rf "$staging_root"
@@ -68,6 +61,7 @@ else
 fi
 
 find "$staging_root" \( -name '.DS_Store' -o -name '._*' \) -delete
+node "$repo_root/scripts/write-release-manifest.mjs" "$repo_root" "$staging_dir"
 
 if command -v ditto >/dev/null 2>&1; then
   ditto -c -k --norsrc --keepParent "$staging_dir" "$archive_path"

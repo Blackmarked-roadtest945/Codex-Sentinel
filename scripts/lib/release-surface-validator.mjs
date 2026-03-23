@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { validateSummaryContract } from "../../evals/lib/release-contract.mjs";
+import { createReleaseManifestMetadata } from "../../evals/lib/release-manifest.mjs";
 
 export function parseValidateReleaseSurfaceArgs(argv) {
   const supportedFlags = new Set(["--require-summary"]);
@@ -17,28 +17,14 @@ export function parseValidateReleaseSurfaceArgs(argv) {
 }
 
 export function loadManifestMetadata(repoRoot) {
-  const manifestResult = spawnSync("node", ["evals/run-codex-sentinel.mjs", "--manifest-json"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-  });
-
-  if (manifestResult.status !== 0) {
-    return {
-      issues: [
-        `unable to load eval manifest metadata: ${manifestResult.stderr || manifestResult.stdout || "unknown error"}`,
-      ],
-      manifestMetadata: null,
-    };
-  }
-
   try {
     return {
       issues: [],
-      manifestMetadata: JSON.parse(manifestResult.stdout),
+      manifestMetadata: createReleaseManifestMetadata(repoRoot),
     };
   } catch (error) {
     return {
-      issues: [`unable to parse eval manifest metadata: ${error.message}`],
+      issues: [`unable to load eval manifest metadata: ${error.message}`],
       manifestMetadata: null,
     };
   }

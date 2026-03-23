@@ -115,7 +115,7 @@ node scripts/verify-release-archive.mjs dist/Codex-Sentinel-fallback.zip
 
 Run those commands only from a clean clone of the repository or the canonical repo root. Do not build release zips from Finder exports, wrapped workspace snapshots, or a directory that contains another repo-shaped copy of Codex-Sentinel.
 
-`node scripts/verify-release-archive.mjs` verifies the shipped release surface against the source tree by comparing normalized paths, file hashes, and eval manifest provenance. It is stronger than a simple zip hygiene check.
+`node scripts/verify-release-archive.mjs` verifies the shipped release surface against the source tree by comparing normalized paths, file hashes, and a checked-in `evals/release-manifest.json` payload that is generated during packaging. The verifier does not execute archive JavaScript.
 
 Artifact types:
 
@@ -127,7 +127,10 @@ Important release rules:
 
 - do not share Finder/manual workspace zips
 - only build release archives from a clean repo root or fresh clone
+- release packaging rejects source-tree symlinks and nested repo-shaped copies outside ignored paths
 - default public source releases and default release zips do not ship `evals/artifacts/`
+- release zips do ship `evals/release-manifest.json`, and verify will fail if it is missing or malformed
+- `.worktrees/` and `worktrees/` content is excluded from public release archives and treated as forbidden during verification
 - if you curate a sanitized evidence bundle with `summary.json`, validate it with `node scripts/validate-release-surface.mjs --require-summary`
 - `.github/workflows/live-acceptance.yml` is manual and self-hosted on purpose; it is optional release evidence, not a default PR gate
 

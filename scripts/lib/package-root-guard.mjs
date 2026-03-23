@@ -1,28 +1,6 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
-
-const ignoredRootDirectories = new Set([
-  ".git",
-  ".superpowers",
-  ".worktrees",
-  "worktrees",
-  "dist",
-  "node_modules",
-  "__MACOSX",
-]);
-
-const ignoredNestedDirectories = new Set([
-  "evals/artifacts",
-]);
-
-function normalizeEntry(entry) {
-  return entry
-    .trim()
-    .replace(/\\/g, "/")
-    .replace(/\/+/g, "/")
-    .replace(/^\.\/+/, "")
-    .replace(/\/$/, "");
-}
+import { normalizeReleasePath, shouldIgnorePackageRootPath } from "./release-policy.mjs";
 
 function isRepoShapedTree(entries) {
   return entries.has("README.md")
@@ -30,10 +8,18 @@ function isRepoShapedTree(entries) {
     && [...entries].some((entry) => entry === "scripts" || entry.startsWith("scripts/"));
 }
 
+function formatRepoShapeIssue(candidatePath) {
+  if (path.posix.basename(candidatePath) === "Ready-to-Push") {
+    return `nested source tree detected at ${candidatePath}/`;
+  }
+
+  return `duplicate repo-shaped tree detected at ${candidatePath}/`;
+}
+
 export function analyzePackageRootEntries(entries) {
-  const normalizedEntries = entries.map(normalizeEntry).filter(Boolean);
+  const normalizedEntries = entries.map(normalizeReleasePath).filter(Boolean);
   const issues = new Set();
-  const topLevelEntries = new Map();
+  const nestedEntriesByCandidate = new Map();
 
   for (const entry of normalizedEntries) {
     const segments = entry.split("/");
@@ -43,30 +29,24 @@ export function analyzePackageRootEntries(entries) {
       issues.add(`nested git directory detected at ${segments.slice(0, gitSegmentIndex + 1).join("/")}/`);
     }
 
-    if (segments.length > 1) {
-      const [topLevel, ...rest] = segments;
-      if (!topLevelEntries.has(topLevel)) {
-        topLevelEntries.set(topLevel, new Set());
+    for (let index = 0; index < segments.length - 1; index += 1) {
+      const candidatePath = segments.slice(0, index + 1).join("/");
+      if (shouldIgnorePackageRootPath(candidatePath)) {
+        continue;
       }
-      topLevelEntries.get(topLevel).add(rest.join("/"));
+
+      const nestedEntry = segments.slice(index + 1).join("/");
+      if (!nestedEntriesByCandidate.has(candidatePath)) {
+        nestedEntriesByCandidate.set(candidatePath, new Set());
+      }
+      nestedEntriesByCandidate.get(candidatePath).add(nestedEntry);
     }
   }
 
-  for (const [topLevel, nestedEntries] of topLevelEntries) {
-    if (ignoredRootDirectories.has(topLevel)) {
-      continue;
+  for (const candidatePath of [...nestedEntriesByCandidate.keys()].sort()) {
+    if (isRepoShapedTree(nestedEntriesByCandidate.get(candidatePath))) {
+      issues.add(formatRepoShapeIssue(candidatePath));
     }
-
-    if (!isRepoShapedTree(nestedEntries)) {
-      continue;
-    }
-
-    if (topLevel === "Ready-to-Push") {
-      issues.add("nested source tree detected at Ready-to-Push/");
-      continue;
-    }
-
-    issues.add(`duplicate repo-shaped tree detected at ${topLevel}/`);
   }
 
   return [...issues].sort();
@@ -78,14 +58,10 @@ export function loadPackageRootEntries(repoRoot) {
   function walk(currentPath, relativePath = "") {
     for (const entry of readdirSync(currentPath, { withFileTypes: true })) {
       const nextRelativePath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
-      const normalizedPath = normalizeEntry(nextRelativePath);
+      const normalizedPath = normalizeReleasePath(nextRelativePath);
 
       if (entry.isDirectory()) {
-        if (!relativePath && ignoredRootDirectories.has(entry.name)) {
-          continue;
-        }
-
-        if (ignoredNestedDirectories.has(normalizedPath)) {
+        if (shouldIgnorePackageRootPath(normalizedPath)) {
           continue;
         }
 
