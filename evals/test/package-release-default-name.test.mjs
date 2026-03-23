@@ -12,8 +12,13 @@ test("package-release defaults to the public Codex-Sentinel archive name", () =>
   const tempRepo = path.join(tempRoot, "repo");
 
   try {
-    mkdirSync(path.join(tempRepo, "scripts"), { recursive: true });
+    mkdirSync(path.join(tempRepo, "scripts", "lib"), { recursive: true });
     cpSync(path.join(repoRoot, "scripts", "package-release.sh"), path.join(tempRepo, "scripts", "package-release.sh"));
+    cpSync(path.join(repoRoot, "scripts", "check-package-root.mjs"), path.join(tempRepo, "scripts", "check-package-root.mjs"));
+    cpSync(
+      path.join(repoRoot, "scripts", "lib", "package-root-guard.mjs"),
+      path.join(tempRepo, "scripts", "lib", "package-root-guard.mjs")
+    );
     writeFileSync(path.join(tempRepo, "README.md"), "# Temp repo\n", "utf8");
     writeFileSync(path.join(tempRepo, ".gitignore"), "dist/\n", "utf8");
 

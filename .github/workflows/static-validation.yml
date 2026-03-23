@@ -18,8 +18,15 @@ jobs:
       - name: Run static validation
         run: scripts/static-validation.sh
 
-      - name: Build release archive
-        run: scripts/package-release.sh
+      - name: Build release archives
+        run: |
+          scripts/package-release.sh
+          CODEX_SENTINEL_FORCE_NO_RSYNC=1 scripts/package-release.sh Codex-Sentinel-fallback
+
+      - name: Verify release archives
+        run: |
+          node scripts/verify-release-archive.mjs dist/Codex-Sentinel.zip
+          node scripts/verify-release-archive.mjs dist/Codex-Sentinel-fallback.zip
 
       - name: Check archive hygiene
         run: |

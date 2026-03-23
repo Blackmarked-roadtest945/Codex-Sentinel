@@ -96,3 +96,37 @@ test("preserves current summary validation when summary exists", () => {
 
   assert.deepEqual(issues, []);
 });
+
+test("reports malformed summary.json in default mode", () => {
+  const repoRoot = createTempRepoRoot();
+  const summaryDir = path.join(repoRoot, "evals", "artifacts");
+
+  mkdirSync(summaryDir, { recursive: true });
+  writeFileSync(path.join(summaryDir, "summary.json"), "{invalid json\n", "utf8");
+
+  const issues = validateSummaryManifest({
+    repoRoot,
+    requireSummary: false,
+    manifestMetadata: createManifestMetadata(),
+  });
+
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /^evals\/artifacts\/summary\.json is not valid JSON:/);
+});
+
+test("reports malformed summary.json in require-summary mode", () => {
+  const repoRoot = createTempRepoRoot();
+  const summaryDir = path.join(repoRoot, "evals", "artifacts");
+
+  mkdirSync(summaryDir, { recursive: true });
+  writeFileSync(path.join(summaryDir, "summary.json"), "{invalid json\n", "utf8");
+
+  const issues = validateSummaryManifest({
+    repoRoot,
+    requireSummary: true,
+    manifestMetadata: createManifestMetadata(),
+  });
+
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /^evals\/artifacts\/summary\.json is not valid JSON:/);
+});

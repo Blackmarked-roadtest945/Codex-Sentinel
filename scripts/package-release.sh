@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 archive_name="${1:-Codex-Sentinel}"
+node "$repo_root/scripts/check-package-root.mjs" "$repo_root"
 dist_dir="$repo_root/dist"
 staging_root="$(mktemp -d "${TMPDIR:-/tmp}/codex-sentinel-release.XXXXXX")"
 staging_dir="$staging_root/$archive_name"

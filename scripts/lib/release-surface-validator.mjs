@@ -55,7 +55,15 @@ export function validateSummaryManifest({ repoRoot, requireSummary = false, mani
     return issues;
   }
 
-  const summary = JSON.parse(readFileSync(summaryPath, "utf8"));
+  let summary;
+
+  try {
+    summary = JSON.parse(readFileSync(summaryPath, "utf8"));
+  } catch (error) {
+    issues.push(`evals/artifacts/summary.json is not valid JSON: ${error.message}`);
+    return issues;
+  }
+
   if (manifestMetadata !== null) {
     issues.push(...validateSummaryContract(summary, manifestMetadata, repoRoot));
     return issues;

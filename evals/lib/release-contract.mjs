@@ -5,6 +5,7 @@ import path from "node:path";
 export const runnerSourceRelativePaths = [
   "evals/run-codex-sentinel.mjs",
   "evals/lib/release-contract.mjs",
+  "evals/lib/check-oracles.mjs",
 ];
 
 export function normalizeCaseManifestRecord(testCase, defaultTimeoutMs) {
