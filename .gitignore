@@ -4,5 +4,6 @@ Thumbs.db
 *.swo
 __pycache__/
 .superpowers/
+.worktrees/
 evals/artifacts/
 dist/
