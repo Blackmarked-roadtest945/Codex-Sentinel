@@ -2,6 +2,10 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  buildReleaseSurfaceManifest,
+  compareReleaseSurfaceManifests,
+} from "./release-surface-manifest.mjs";
 
 const forbiddenRelativePrefixes = [
   "dist/",
@@ -117,6 +121,7 @@ export function verifyReleaseArchive({ archivePath, sourceRoot }) {
   const entries = listArchiveEntries(archivePath);
   const entryReport = analyzeArchiveEntries(entries);
   const issues = [...entryReport.issues];
+  const surfaceIssues = [];
   let sourceManifest = null;
   let archiveManifest = null;
 
@@ -146,7 +151,14 @@ export function verifyReleaseArchive({ archivePath, sourceRoot }) {
     } else {
       sourceManifest = loadManifestMetadata(sourceRoot);
       archiveManifest = loadManifestMetadata(extractedRoot);
+      surfaceIssues.push(
+        ...compareReleaseSurfaceManifests(
+          buildReleaseSurfaceManifest(sourceRoot),
+          buildReleaseSurfaceManifest(extractedRoot)
+        )
+      );
       issues.push(...compareManifestMetadata(sourceManifest, archiveManifest));
+      issues.push(...surfaceIssues);
     }
   } finally {
     rmSync(extractRoot, { recursive: true, force: true });
@@ -157,6 +169,7 @@ export function verifyReleaseArchive({ archivePath, sourceRoot }) {
     rootDirName: entryReport.rootDirName,
     forbiddenEntries: entryReport.forbiddenEntries,
     issues,
+    surfaceIssues,
     sourceManifest,
     archiveManifest,
   };

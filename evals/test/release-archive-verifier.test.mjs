@@ -5,6 +5,7 @@ import {
   analyzeArchiveEntries,
   compareManifestMetadata,
 } from "../../scripts/lib/release-archive-verifier.mjs";
+import { compareReleaseSurfaceManifests } from "../../scripts/lib/release-surface-manifest.mjs";
 
 test("rejects forbidden archive entries under the packaged root", () => {
   const report = analyzeArchiveEntries([
@@ -59,5 +60,71 @@ test("rejects manifest metadata drift between source and archive", () => {
     "archive case_manifest_fingerprint does not match source manifest fingerprint",
     "archive runner_source_fingerprint does not match source runner fingerprint",
     "archive case_ids do not exactly match source manifest order",
+  ]);
+});
+
+test("allows an unchanged shipped surface", () => {
+  const issues = compareReleaseSurfaceManifests(
+    [
+      { entryType: "directory", relativePath: "docs" },
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+      { entryType: "file", relativePath: "skills/codex-sentinel/SKILL.md", contentHash: "hash-b" },
+    ],
+    [
+      { entryType: "directory", relativePath: "docs" },
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+      { entryType: "file", relativePath: "skills/codex-sentinel/SKILL.md", contentHash: "hash-b" },
+    ]
+  );
+
+  assert.deepEqual(issues, []);
+});
+
+test("rejects a tampered shipped file", () => {
+  const issues = compareReleaseSurfaceManifests(
+    [
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+    ],
+    [
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-b" },
+    ]
+  );
+
+  assert.deepEqual(issues, [
+    "archive content hash does not match source for README.md",
+  ]);
+});
+
+test("rejects an extra nested Ready-to-Push tree", () => {
+  const issues = compareReleaseSurfaceManifests(
+    [
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+    ],
+    [
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+      { entryType: "directory", relativePath: "Ready-to-Push" },
+      { entryType: "file", relativePath: "Ready-to-Push/README.md", contentHash: "hash-c" },
+    ]
+  );
+
+  assert.deepEqual(issues, [
+    "archive contains unexpected path Ready-to-Push",
+    "archive contains unexpected path Ready-to-Push/README.md",
+  ]);
+});
+
+test("rejects a missing shipped file", () => {
+  const issues = compareReleaseSurfaceManifests(
+    [
+      { entryType: "file", relativePath: "README.md", contentHash: "hash-a" },
+      { entryType: "file", relativePath: "skills/codex-sentinel/SKILL.md", contentHash: "hash-b" },
+    ],
+    [
+      { entryType: "file", relativePath: "skills/codex-sentinel/SKILL.md", contentHash: "hash-b" },
+    ]
+  );
+
+  assert.deepEqual(issues, [
+    "archive is missing path README.md",
   ]);
 });

@@ -12,6 +12,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const ignoredDirectories = new Set([".git", ".superpowers", "dist", "node_modules"]);
 const machineSpecificPathPatterns = [
   /\/Users\/[A-Za-z0-9._-]+\//g,
+  /\/Volumes\/[A-Za-z0-9._-]+\//g,
   /\/private\/var\/folders\/[A-Za-z0-9._-]+\//g,
   /\/var\/folders\/[A-Za-z0-9._-]+\//g,
 ];

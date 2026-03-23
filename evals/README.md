@@ -53,6 +53,10 @@ Treat `evals/artifacts/` as an internal validation bundle unless you have explic
 
 If a curated evidence bundle includes `summary.json`, every promoted artifact path referenced by that summary must exist in the bundle and the bundle should pass `node scripts/validate-release-surface.mjs --require-summary`.
 
+Build release zips only from a clean clone of the repository or the canonical repo root. Do not package from workspace wrappers or directories that contain another repo-shaped copy of Codex-Sentinel.
+
+`node scripts/verify-release-archive.mjs` now compares the shipped release surface against the source tree using normalized paths, file hashes, and eval manifest provenance. A matching manifest alone is not treated as sufficient proof anymore.
+
 The script prints a final JSON summary with:
 
 - `case_manifest_fingerprint`
