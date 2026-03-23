@@ -5,6 +5,8 @@ import path from "node:path";
 const ignoredPathPrefixes = [
   ".git",
   ".superpowers",
+  ".worktrees",
+  "worktrees",
   "dist",
   "evals/artifacts",
   "docs/superpowers/plans",
